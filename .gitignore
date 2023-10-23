@@ -1,0 +1,22 @@
+/python/
+# PyCharm
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+*.iws.bak
+*.ipr.bak
+
+# Django
+*.log
+*.sqlite3
+*.db
+*.pyc
+__pycache__/
+
+# Python
+*.py[cod]
+*$py.class
+*.so
+*.egg-info
