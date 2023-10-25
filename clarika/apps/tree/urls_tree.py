@@ -1,7 +1,6 @@
 from django.urls import path
-from django.urls import re_path
 
-from tree.logic import SaludoView
+from clarika.apps.tree.logic import SaludoView
 
 # from rest_framework_jwt.views import obtain_jwt_token
 

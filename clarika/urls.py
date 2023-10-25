@@ -21,5 +21,5 @@ from django.urls import re_path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    re_path(r'', include('tree.urls_tree')),
+    re_path(r'', include('clarika.apps.tree.urls_tree')),
 ]
