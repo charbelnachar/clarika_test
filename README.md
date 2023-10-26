@@ -35,7 +35,7 @@ El candidato deberá crear un repositorio en GitHub, GitLab o Bitbucket, selecci
 
 Clonar el repositorio:
 ```
-git clone https://github.com/charbelnachar/arbol-rest.git
+git clone https://github.com/charbelnachar/clarika_test
 ```
 Instalar las dependencias:
 ```
