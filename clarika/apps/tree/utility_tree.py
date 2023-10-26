@@ -82,11 +82,53 @@ class Node:
 
         :param indent: Nivel de sangría (default: 0).
         """
-        if not self.deleted:
-            print('  ' * indent + str(self.id) + ": " + self.value)
+        # if not self.deleted:
+        print('  ' * indent + str(self.id) + ": " + self.value +": " + str(self.deleted))
         for child in self.children:
             child.print_tree(indent + 1)
 
+    def to_dict(self)->dict:
+        """
+        Convierte el nodo y su estructura de árbol en un diccionario.
+
+        :return: Diccionario que representa el nodo y su estructura de árbol.
+        """
+        return {
+                'node_id' : self.id,
+                'value'   : self.value,
+                'deleted' : self.deleted,
+                'children': [child.to_dict() for child in self.children]
+                }
+
+    def to_dict_no_deleted(self)-> dict:
+        """
+        Convierte el nodo y su estructura de árbol en un diccionario, excluyendo los nodos eliminados.
+
+        :return: Diccionario que representa el nodo y su estructura de árbol, excluyendo los nodos eliminados.
+        """
+        return {
+                'node_id' : self.id,
+                'value'   : self.value,
+                'deleted' : self.deleted,
+                'children': [child.to_dict() for child in self.children if not child.deleted]
+                }
+
+    def delete_one_node(self)-> None:
+        """
+        Marca el nodo actual como eliminado.
+        """
+        self.deleted = True
+
+    def has_children_not_deleted(self) -> bool:
+        """
+        Verifica si el nodo tiene hijos que no están marcados como eliminados.
+
+        :return: True si el nodo tiene al menos un hijo no eliminado; False en caso contrario.
+        """
+        for child in self.children:
+            if not child.deleted:
+                return True
+        return False
 
 class Tree:
     count_id_node = 0
@@ -101,6 +143,7 @@ class Tree:
         node.set_id(self.count_id_node)
         self.root = node
 
+
     def add_node(self, node: Node, parent_id: int) -> bool:
         """
         Agrega un nodo al árbol como hijo del nodo con el ID especificado.
@@ -113,8 +156,8 @@ class Tree:
                  SizeNodeExceMax si se excede el límite de tamaño del nodo.
         """
         parent_node, level = self.get_level_and_node(self.root, parent_id)
-        if level < NODE_LEVEL:
-            if parent_node:
+        if parent_node is not None :
+            if level < NODE_LEVEL:
                 if not parent_node.deleted:
                     self.count_id_node += 1
                     node.set_id(self.count_id_node)
@@ -122,26 +165,52 @@ class Tree:
                     parent_node.children.append(node)
                     return True
                 else:
-                    raise NodeIsDeleted(parent_node)
+                    raise NodeIsDeleted(parent_id)
             else:
-                raise NodeIdDoesNotExit(parent_id)
+                raise SizeNodeExceMax(level)
         else:
-            raise SizeNodeExceMax(level)
+            raise  NodeIdDoesNotExit(parent_id)
 
 
 
-    def delete_node(self, node_id: int) -> bool:
+    def delete_node_by_id(self, node_id: int) -> bool:
+        """
+        Marca un nodo por id  y sus hijos como eliminados en el árbol.
+
+        :param node_id: ID del nodo a eliminar.
+        :return: True si el nodo se eliminó correctamente, False en caso contrario.
+        """
+        node = self.find_node(self.root, node_id)
+        if node:
+            node.delete_node_and_children()
+            return True
+        return False
+
+    def delete_node_by_node(self, node: Node) -> bool:
         """
         Marca un nodo y sus hijos como eliminados en el árbol.
+
+        :param node: nodo a eliminar.
+        :return: True si el nodo se eliminó correctamente, False en caso contrario.
+        """
+
+        if node:
+            node.delete_node_and_children()
+            return True
+        return False
+
+    def delete_one_node(self, node_id: int) -> bool:
+        """
+        Marca un nodo como eliminados en el árbol.
 
         :param node_id: ID del nodo a eliminar.
         :return: True si el nodo se eliminó correctamente, False en caso contrario.
         """
         node = self.find_node(self.root, node_id)
         if node and not node.get_deleted_value():
-            node.delete_node_and_children()
             return True
         return False
+
 
     def restore_node_and_children(self, node_id: int) -> bool:
         """
@@ -188,7 +257,7 @@ class Tree:
             if result:
                 node, level = result
                 return (node, level)
-        return None
+        return (None,None)
 
     def create_new_node(self, node_id: int) -> Node:
         """
@@ -201,3 +270,116 @@ class Tree:
         node.parent.children.remove(node)
         node.parent = None
         return node
+
+    def adjust_ids(self, node, next_id) -> None:
+        """
+        Ajusta los ID de los nodos en el árbol y sus hijos al agregar un valor especificado a cada ID.
+
+        :param node: Nodo al que se le ajustará el ID.
+        :param next_id: Valor a agregar a cada ID.
+        :return: None
+        """
+        node.id += next_id
+        for child in node.children:
+            self.adjust_ids(child, next_id)
+
+        self.count_id_node += 1
+
+    def get_depth(self, node)->int:
+        """
+        Obtiene la profundidad máxima del árbol a partir del nodo dado.
+
+        :param node: Nodo desde el que se calculará la profundidad.
+        :return: Profundidad máxima del árbol a partir del nodo dado.
+        """
+        if not node.children:
+            return 1
+        return 1 + max(self.get_depth(child) for child in node.children)
+
+    def reset(self) -> None:
+        self.count_id_node = 0
+        current_nodes = [self.root]
+        node_id = 1
+        max_nodes = 10  # Número máximo de nodos
+        max_levels = 4  # Número máximo de niveles
+
+        while node_id <= max_nodes:
+            next_level_nodes = []
+            for current_node in current_nodes:
+                for _ in range(max_nodes // len(current_nodes)):
+                    if node_id > max_nodes:
+                        break
+                    new_node = Node(current_node.id)
+                    new_node.set_value(f'Node {node_id}')
+                    new_node.set_id(node_id)
+                    current_node.children.append(new_node)
+                    next_level_nodes.append(new_node)
+                    node_id += 1
+            current_nodes = next_level_nodes
+
+        # Marcar como eliminados los nodos restantes
+        for current_node in current_nodes:
+            for child in current_node.children:
+                child.delete_node_and_children()
+
+
+
+    def add_subtree_by_id(self, new_subtree, node_id)->None:
+        """
+                Agrega un nuevo subárbol al nodo especificado por ID en el árbol actual.
+
+                :param new_subtree: Nuevo subárbol a agregar.
+                :param node_id: ID del nodo al que se agregará el nuevo subárbol.
+                :raises: SizeNodeExceMax si la profundidad del árbol después de la adición excede NODE_LEVEL.
+                :return: None
+                """
+        level_tree1 = self.get_depth(self.root)
+        level_tree2 = self.get_depth(new_subtree.root)
+        if self.get_depth(self.root) + self.get_depth(new_subtree.root) > NODE_LEVEL:
+            raise SizeNodeExceMax(level_tree1 + level_tree2)
+
+        self.adjust_ids(new_subtree.root, self.count_id_node)
+
+        node = self.find_node(self.root, node_id)
+        if node is not None:
+            node.children.append(new_subtree.root)
+
+    def add_subtree_by_node(self, new_subtree, node)->None:
+        """
+                Agrega un nuevo subárbol al nodo especificado por Nodo en el árbol actual.
+
+                :param new_subtree: Nuevo subárbol a agregar.
+                :param node_id: ID del nodo al que se agregará el nuevo subárbol.
+                :raises: SizeNodeExceMax si la profundidad del árbol después de la adición excede NODE_LEVEL.
+                :return: None
+                """
+        # Verificar que la adición del nuevo subárbol no haga que el árbol antiguo supere el límite de 10 niveles
+        level_tree1 =  self.get_depth(self.root)
+        level_tree2 = self.get_depth(new_subtree.root)
+        if self.get_depth(self.root) + self.get_depth(new_subtree.root) > NODE_LEVEL:
+            raise SizeNodeExceMax(level_tree1+level_tree2)
+
+
+        # Ajustar los ID de los nodos del nuevo subárbol
+        self.adjust_ids(new_subtree.root, self.count_id_node)
+
+        # Agregar el nuevo subárbol al nodo especificado en el árbol antiguo
+        if node is not None:
+            node.children.append(new_subtree.root)
+
+class UtilityNode:
+    def dict_to_node(self,data) ->Node:
+        """
+               Convierte un diccionario de datos en un nodo y sus hijos.
+
+               :param data: Diccionario de datos que representa un nodo y sus hijos.
+               :return: El nodo generado a partir del diccionario.
+               """
+        node = Node()
+        node.set_value(data['value'])
+        node.set_id(data['node_id'])
+        node.deleted = data['deleted']
+        node.children = [self.dict_to_node(child_data) for child_data in data['children']]
+        return node
+
+

@@ -60,7 +60,7 @@ class TestTreeMethods(unittest.TestCase):
         child = Node()
 
         tree.add_node(child, root.get_id())
-        self.assertTrue(tree.delete_node(child.get_id()))
+        self.assertTrue(tree.delete_node_by_id(child.get_id()))
         self.assertTrue(child.get_deleted_value())
 
     def test_restore_node_and_children(self):
