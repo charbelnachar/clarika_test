@@ -23,102 +23,6 @@ tree = Tree(root_node)
 
 
 
-class SaludoView(View):
-    def put(self, request):
-        tree2 = {
-    "node_id": 1,
-    "value": "root",
-    "children": [
-        {
-            "node_id": 2,
-            "value": "child 1",
-            "children": [],
-            "deleted": False
-        },
-        {
-            "node_id": 3,
-            "value": "child 2",
-            "children": [
-                {
-                    "node_id": 4,
-                    "value": "grandchild 1",
-                    "children": [],
-                    "deleted": False
-                }
-            ],
-            "deleted": False
-        }
-    ],
-    "deleted": False
-}
-
-        aux = UtilityNode()
-        awae = aux.dict_to_node(tree2)
-        tree3 = Tree(awae)
-        node1 = Node()
-        node1.set_value("node1")
-
-        node2 = Node()
-        node2.set_value("node2")
-
-        node3 = Node()
-        node3.set_value("node3")
-
-        node4 = Node()
-        node4.set_value("ode4")
-
-        node5 = Node()
-        node5.set_value("node5")
-        node6 = Node()
-        node6.set_value("node6")
-
-        node7 = Node()
-        node7.set_value("node7")
-
-        tree = Tree(node1)
-
-        tree.add_node(node2, 1)
-
-        tree.add_node(node3, 2)
-
-        tree.add_node(node4, 3)
-
-        tree.add_node(node5, 4)
-
-        tree.add_node(node6, 5)
-
-        tree.add_node(node7, 6)
-
-        # tree.add_node(node7, 3)
-        a = tree.root
-        a.print_tree()
-
-        # tree.delete_node_by_id(4)
-        # tree.add_node(node7,5)
-        print()
-        tree.root.print_tree()
-        print("-----------------------")
-        # tree.restore_node_and_children(2)
-        print()
-        a.print_tree()
-        print("----------antes------------")
-        # z = tree.create_new_node(5)
-        # tree2 = Tree(z)
-        # z.print_tree()
-        # # tree2.restore_node_and_children(4)
-        # print("--------despues-----------")
-        # z.print_tree()
-        print("--------viejo-----------")
-        a.print_tree()
-        # print("--------reset-----------")
-        # tree.reset()
-        tree.root.print_tree()
-        tree.add_subtree_by_id(tree3,4)
-        tree.add_subtree_by_id(tree3, 6)
-
-        tree.reset()
-        wa = tree.root.to_dict()
-        return JsonResponse(wa)
 
 
 # class CreateTreeView(View):
@@ -170,9 +74,10 @@ class AddNodeTreeView(View):
 
 class EditValueNodeView(View):
     def put(self, request):
-        node_value = request.data.get("node_value", "")
+        data = JSONParser().parse(request)
+        node_value = data.get("node_value", "")
         try:
-            node_id = int(request.data.get("node_id", 0))
+            node_id = int(data.get("node_id", 0))
         except ValueError as e:
             return JsonResponse({"error": f'valor del id del padre no es un int'},
                             status=HTTP_400_BAD_REQUEST)
