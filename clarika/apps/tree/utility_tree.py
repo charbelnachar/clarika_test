@@ -254,10 +254,10 @@ class Tree:
             return start_node, current_level
         for child in start_node.children:
             result = self.get_level_and_node(child, node_id, current_level + 1)
-            if result:
+            if result != (None, None):
                 node, level = result
                 return (node, level)
-        return (None,None)
+        return (None, None)
 
     def create_new_node(self, node_id: int) -> Node:
         """
